@@ -1,0 +1,1188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Retirement State Comparison Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0f2540;          /* deep navy */
+  --ink-2:#1c3a5e;
+  --paper:#f6f4ee;        /* warm cream */
+  --card:#ffffff;
+  --line:#dcd7cb;
+  --line-2:#e8e4da;
+  --muted:#6b7280;
+  --muted-2:#8a8f98;
+  --accent:#a67c1f;       /* restrained gold */
+  --accent-soft:#f3ead2;
+  --good:#1f6b4f;
+  --good-soft:#e3f0e8;
+  --warn:#9a6a12;
+  --warn-soft:#f7eed6;
+  --bad:#9b2c2c;
+  --bad-soft:#f6e2e1;
+  --neutral:#3a4a5e;
+  --shadow:0 1px 2px rgba(15,37,64,.06),0 6px 22px rgba(15,37,64,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"IBM Plex Sans",-apple-system,sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  line-height:1.5;
+  font-size:15px;
+  -webkit-font-smoothing:antialiased;
+}
+.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;}
+h1,h2,h3{font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0;}
+a{color:var(--accent)}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:0 22px 70px}
+header.site{
+  background:linear-gradient(180deg,#0f2540 0%,#163357 100%);
+  color:#f6f4ee;border-bottom:3px solid var(--accent);
+}
+.site-inner{max-width:1180px;margin:0 auto;padding:30px 22px 26px}
+.brandrow{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.brandrow .badge{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-soft);border:1px solid rgba(243,234,210,.35);padding:3px 9px;border-radius:999px}
+header.site h1{font-size:30px;color:#fff;line-height:1.1}
+header.site p{margin:10px 0 0;max-width:760px;color:#c9d4e2;font-size:14.5px}
+header.site p.vintage{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:#8fa1b8;margin-top:8px;letter-spacing:.02em}
+
+.section{margin-top:26px}
+.section > h2{font-size:20px;display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.section > h2 .n{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--accent);border:1px solid var(--accent);border-radius:6px;padding:1px 7px;font-weight:500}
+.section .hint{color:var(--muted);font-size:13px;margin:2px 0 14px}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px}
+
+/* ---------- form ---------- */
+.formgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px 18px}
+.fieldgroup-title{grid-column:1/-1;font-family:"IBM Plex Serif",serif;font-size:14px;color:var(--ink-2);font-weight:600;border-bottom:1px solid var(--line-2);padding-bottom:6px;margin-top:6px}
+.field-note{grid-column:1/-1;font-size:12.5px;color:var(--muted);background:#efece4;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:9px 12px;line-height:1.5;margin:-2px 0 4px}
+.fieldgroup-title:first-child{margin-top:0}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--neutral);font-weight:500}
+label.f .lbl{display:flex;align-items:center;gap:6px}
+label.f input,label.f select{
+  font-family:inherit;font-size:14px;color:var(--ink);background:#fcfbf8;
+  border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%;
+}
+label.f input.num-in{font-family:"IBM Plex Mono",monospace}
+label.f input:focus,label.f select:focus{outline:none;border-color:var(--ink-2);box-shadow:0 0 0 3px rgba(28,58,94,.12)}
+.err-msg{color:var(--bad);font-size:12px;margin-top:2px}
+.hidden{display:none !important}
+
+/* ---------- state selector ---------- */
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.preset-btn{font-size:12.5px;font-family:"IBM Plex Mono",monospace;background:#fff;border:1px solid var(--line);color:var(--ink-2);padding:7px 11px;border-radius:999px;cursor:pointer;transition:.15s}
+.preset-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.state-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:7px}
+.state-chip{display:flex;align-items:center;gap:7px;font-size:13px;border:1px solid var(--line);border-radius:8px;padding:7px 9px;cursor:pointer;background:#fcfbf8;user-select:none;transition:.12s}
+.state-chip:hover{border-color:var(--ink-2)}
+.state-chip.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+.state-chip input{accent-color:var(--accent);margin:0}
+.sel-count{font-size:13px;color:var(--muted);margin-top:12px}
+.sel-count.bad{color:var(--bad);font-weight:600}
+
+/* ---------- buttons ---------- */
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.btn{font-family:inherit;font-size:14px;font-weight:600;border-radius:9px;padding:11px 18px;cursor:pointer;border:1px solid transparent;transition:.15s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#8c681a}
+.btn-ghost{background:#fff;border-color:var(--line);color:var(--ink-2)}
+.btn-ghost:hover{border-color:var(--ink-2)}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:50;box-shadow:var(--shadow)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---------- summary cards ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 16px 15px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.card .k{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.card .v{font-family:"IBM Plex Mono",monospace;font-size:23px;font-weight:600;margin-top:7px;line-height:1.15}
+.card .sub{font-size:12px;color:var(--muted);margin-top:4px}
+.card.accent-good{border-top:3px solid var(--good)}
+.card.accent-bad{border-top:3px solid var(--bad)}
+.card.accent-gold{border-top:3px solid var(--accent)}
+.card.accent-ink{border-top:3px solid var(--ink-2)}
+
+/* ---------- tables ---------- */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+thead th{background:var(--ink);color:#eaf0f7;font-weight:600;text-align:right;padding:11px 12px;white-space:nowrap;font-size:12px;letter-spacing:.01em;position:sticky;top:0}
+thead th:first-child,thead th.left{text-align:left}
+tbody td{padding:10px 12px;border-bottom:1px solid var(--line-2);text-align:right;white-space:nowrap}
+tbody td:first-child,tbody td.left{text-align:left}
+tbody tr:nth-child(even){background:#faf8f3}
+tbody tr:hover{background:var(--accent-soft)}
+.cell-num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.rankbadge{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:12px}
+.rank-1{background:var(--good);color:#fff}
+.rank-last{background:var(--bad-soft);color:var(--bad)}
+.rank-mid{background:var(--line-2);color:var(--ink-2)}
+.statecell{font-weight:600}
+.statecell .abbr{font-family:"IBM Plex Mono",monospace;color:var(--muted);font-weight:500;font-size:11.5px;margin-left:5px}
+.est-tag{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.05em;color:var(--warn);background:var(--warn-soft);border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle}
+.verdict{display:inline-block;font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:6px;white-space:normal}
+.v-good{background:var(--good-soft);color:var(--good)}
+.v-warn{background:var(--warn-soft);color:var(--warn)}
+.v-bad{background:var(--bad-soft);color:var(--bad)}
+.v-neutral{background:var(--line-2);color:var(--ink-2)}
+.yes{color:var(--bad);font-weight:600}
+.no{color:var(--good);font-weight:600}
+.partial{color:var(--warn);font-weight:600}
+.neg{color:var(--good)}
+.conf{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.04em;border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle;font-weight:600}
+.conf-High{color:var(--good);background:var(--good-soft)}
+.conf-Medium{color:var(--warn);background:var(--warn-soft)}
+.conf-Low{color:var(--bad);background:var(--bad-soft)}
+.assump{font-size:12px;color:var(--muted);background:#efece4;border:1px solid var(--line);border-radius:8px;padding:10px 13px;margin:10px 0 0;line-height:1.55}
+.warn-banner{background:var(--bad-soft);border:1px solid var(--bad);border-left:4px solid var(--bad);border-radius:10px;padding:13px 16px;margin:0 0 18px;color:var(--ink);font-size:13.5px;line-height:1.55}
+.warn-banner strong{color:var(--bad)}
+.warn-banner .wb-title{display:block;font-weight:700;color:var(--bad);margin-bottom:3px;font-size:13px;letter-spacing:.01em}
+
+/* ---------- red flags ---------- */
+.flagcols{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.flagcard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow)}
+.flagcard h3{font-size:16px;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.flagcard h3 .score{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:500;color:var(--muted)}
+.flag{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line-2);font-size:12.5px;color:var(--neutral)}
+.flag:first-of-type{border-top:none}
+.flag .dot{flex:0 0 auto;width:9px;height:9px;border-radius:50%;margin-top:5px}
+.flag.sev-high .dot{background:var(--bad)}
+.flag.sev-med .dot{background:var(--warn)}
+.flag.sev-low .dot{background:var(--accent)}
+.flag .ft{font-weight:600;color:var(--ink);display:block;margin-bottom:1px}
+.noflags{font-size:13px;color:var(--good);display:flex;gap:8px;align-items:center;padding:8px 0}
+
+/* ---------- recommendation ---------- */
+.reco{background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:22px 24px;box-shadow:var(--shadow)}
+.reco h3{font-size:17px;margin:18px 0 6px}
+.reco h3:first-child{margin-top:0}
+.reco p{margin:0 0 11px;font-size:14.5px;color:#243449;line-height:1.62}
+.reco p strong{color:var(--ink)}
+.reco .band{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11.5px;background:var(--accent-soft);color:#7a5c14;padding:3px 9px;border-radius:6px;margin-bottom:12px}
+.reco ul{margin:0 0 12px;padding-left:20px}
+.reco li{font-size:14px;margin-bottom:6px;color:#243449}
+.reco li b{color:var(--ink)}
+
+/* ---------- footer ---------- */
+.disclaimer{margin-top:30px;font-size:12.5px;color:var(--muted);background:#efece4;border:1px solid var(--line);border-radius:10px;padding:16px 18px;line-height:1.6}
+.disclaimer strong{color:var(--ink-2)}
+.profile-readout{font-size:13px;color:var(--neutral);display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px 22px;margin-bottom:4px}
+.profile-readout .pr{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dotted var(--line);padding:4px 0}
+.profile-readout .pr span:last-child{font-family:"IBM Plex Mono",monospace;color:var(--ink)}
+
+#report.empty-state{text-align:center;color:var(--muted);padding:40px 20px;border:1px dashed var(--line);border-radius:14px;background:#fbfaf6}
+#report.empty-state h2{color:var(--ink-2);margin-bottom:8px}
+
+/* ---------- print ---------- */
+@media print{
+  body{background:#fff;font-size:11.5px}
+  header.site{background:#fff !important;color:#000;border-bottom:2px solid #000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  header.site h1{color:#000}
+  header.site p,.brandrow .badge{color:#333;border-color:#999}
+  .no-print{display:none !important}
+  .panel,.card,.flagcard,.reco,.tablewrap{box-shadow:none}
+  thead th{background:#22364f !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .verdict,.rankbadge,.card,.v-good,.v-bad,.v-warn{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .wrap{padding-bottom:10px}
+  .section{break-inside:avoid}
+  .tablewrap{overflow:visible}
+}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="site-inner">
+    <div class="brandrow">
+      <h1>Retirement State Comparison Tool</h1>
+      <span class="badge">Education only</span>
+    </div>
+    <p>Compare 2 to 4 states on retirement taxes, Social Security treatment, property taxes, insurance, healthcare, and cost-of-living differences. This is a state-level planning model, not a full retirement projection.</p>
+    <p class="vintage" id="vintage"></p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ===================== INPUTS ===================== -->
+  <div class="section no-print">
+    <h2><span class="n">1</span> Your Retirement Profile</h2>
+    <p class="hint">A sample profile is preloaded. Change anything and recalculate. All math runs in your browser — nothing is uploaded.</p>
+    <div class="panel">
+      <div class="formgrid" id="formgrid"><!-- built by JS --></div>
+    </div>
+  </div>
+
+  <!-- ===================== STATE SELECT ===================== -->
+  <div class="section no-print">
+    <h2><span class="n">2</span> States to Compare</h2>
+    <p class="hint">Choose 2 to 4 states (50 states + Washington, D.C.). Use a preset or pick your own.</p>
+    <div class="panel">
+      <div class="presets" id="presets"></div>
+      <div class="state-grid" id="stateGrid"></div>
+      <div class="sel-count" id="selCount"></div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="btnCalc">Calculate Comparison</button>
+      <button class="btn btn-ghost" id="btnReset">Reset to Sample Profile</button>
+      <button class="btn btn-ghost" id="btnCopy">Copy Report</button>
+      <button class="btn btn-ghost" id="btnCsv">Export Summary as CSV</button>
+      <button class="btn btn-ghost" id="btnPrint">Print Report</button>
+    </div>
+  </div>
+
+  <!-- ===================== REPORT ===================== -->
+  <div id="report" class="empty-state">
+    <h2>Your comparison report will appear here</h2>
+    <p>Enter your details above, pick your states, and press <strong>Calculate Comparison</strong>.</p>
+  </div>
+
+  <div class="disclaimer">
+    <strong>Disclaimer.</strong> This tool is for education and planning only. It is not tax, legal, or financial advice.
+    It compares <strong>state-level</strong> costs only and does <strong>not</strong> model federal income tax, investment growth,
+    portfolio withdrawal sustainability, RMDs, Medicare/IRMAA surcharges, sequence-of-returns risk, home appreciation, or
+    local/municipal income taxes. The tax treatment, cost-of-living, healthcare, and insurance figures are simplified estimates,
+    states with more complex rules are marked <span class="est-tag">EST</span>, and each state carries a confidence rating.
+    Data reflects 2025 tax-year rules (approximate). Confirm details with a qualified tax professional before making relocation
+    or retirement decisions.
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   STATE TAX DATA
+   ------------------------------------------------------------
+   Simplified, education-grade approximations.
+   >>> UPDATE 2026 INCOME-TAX RATES / BRACKETS below.
+   >>> UPDATE retirement-income exclusion treatment below.
+   >>> UPDATE effectivePropertyTaxRate below.
+   >>> UPDATE costOfLivingIndex / healthcareCostIndex below.
+   Treatment values map to taxable inclusion fractions:
+     "not taxed"            -> 0%
+     "partially excluded"   -> 50%   (partial / age-based exclusions, simplified)
+     "partially taxed"      -> 50%
+     "taxed" / "taxed as income" -> 100%
+   Progressive brackets are MFJ-basis {upTo, rate}; non-MFJ thresholds
+   are scaled by a filing factor (approximation -> state marked estimated).
+   ============================================================ */
+const STATE_DATA = {
+PA:{stateName:"Pennsylvania",abbreviation:"PA",hasStateIncomeTax:true,incomeTaxType:"flat",flatIncomeTaxRate:0.0307,progressiveBrackets:[],
+  socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"not taxed",ira401kTaxTreatment:"not taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",
+  effectivePropertyTaxRate:0.0149,averageSalesTaxRate:0.0634,costOfLivingIndex:95,healthcareCostIndex:101,insuranceRisk:"low",hasEstateTax:false,hasInheritanceTax:true,estimated:false,
+  notes:"Retirement-tax friendly: SS, pensions and IRA/401(k) distributions for eligible retirees are not state-taxed. Inheritance tax can matter; property tax is high."},
+NJ:{stateName:"New Jersey",abbreviation:"NJ",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:20000,rate:.014},{upTo:50000,rate:.0175},{upTo:70000,rate:.0245},{upTo:80000,rate:.035},{upTo:150000,rate:.05525},{upTo:500000,rate:.0637},{upTo:1000000,rate:.0897},{upTo:Infinity,rate:.1075}],
+  socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",
+  effectivePropertyTaxRate:0.0223,averageSalesTaxRate:0.0660,costOfLivingIndex:113,healthcareCostIndex:103,insuranceRisk:"medium",hasEstateTax:false,hasInheritanceTax:true,estimated:true,
+  notes:"Generous retirement-income exclusion for many retirees, but the highest property taxes in the nation and an inheritance tax."},
+FL:{stateName:"Florida",abbreviation:"FL",hasStateIncomeTax:false,incomeTaxType:"none",flatIncomeTaxRate:0,progressiveBrackets:[],
+  socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"not taxed",ira401kTaxTreatment:"not taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"not taxed",
+  effectivePropertyTaxRate:0.0080,averageSalesTaxRate:0.0700,costOfLivingIndex:103,healthcareCostIndex:105,insuranceRisk:"very high",hasEstateTax:false,hasInheritanceTax:false,estimated:false,
+  notes:"No state income tax of any kind and no estate/inheritance tax. The catch is property/home insurance, which is among the highest in the country."},
+TX:{stateName:"Texas",abbreviation:"TX",hasStateIncomeTax:false,incomeTaxType:"none",flatIncomeTaxRate:0,progressiveBrackets:[],
+  socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"not taxed",ira401kTaxTreatment:"not taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"not taxed",
+  effectivePropertyTaxRate:0.0160,averageSalesTaxRate:0.0820,costOfLivingIndex:93,healthcareCostIndex:102,insuranceRisk:"high",hasEstateTax:false,hasInheritanceTax:false,estimated:false,
+  notes:"No income tax and no estate/inheritance tax, but high property taxes and elevated insurance costs offset much of the income-tax savings."},
+DE:{stateName:"Delaware",abbreviation:"DE",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:2000,rate:0},{upTo:5000,rate:.022},{upTo:10000,rate:.039},{upTo:20000,rate:.048},{upTo:25000,rate:.052},{upTo:60000,rate:.0555},{upTo:Infinity,rate:.066}],
+  socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",
+  effectivePropertyTaxRate:0.0053,averageSalesTaxRate:0.0000,costOfLivingIndex:101,healthcareCostIndex:102,insuranceRisk:"low",hasEstateTax:false,hasInheritanceTax:false,estimated:true,
+  notes:"No sales tax, low property tax, a retirement-income exclusion, and no estate/inheritance tax. Often very retirement friendly."},
+NC:{stateName:"North Carolina",abbreviation:"NC",hasStateIncomeTax:true,incomeTaxType:"flat",flatIncomeTaxRate:0.0425,progressiveBrackets:[],
+  socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",
+  effectivePropertyTaxRate:0.0073,averageSalesTaxRate:0.0700,costOfLivingIndex:96,healthcareCostIndex:99,insuranceRisk:"medium",hasEstateTax:false,hasInheritanceTax:false,estimated:false,
+  notes:"Flat income tax that applies to pensions and IRA/401(k) withdrawals, but SS is exempt and property tax/cost of living are moderate."},
+CA:{stateName:"California",abbreviation:"CA",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:21512,rate:.01},{upTo:50998,rate:.02},{upTo:80490,rate:.04},{upTo:111732,rate:.06},{upTo:141212,rate:.08},{upTo:721318,rate:.093},{upTo:865574,rate:.103},{upTo:1442628,rate:.113},{upTo:Infinity,rate:.123}],
+  socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",
+  effectivePropertyTaxRate:0.0071,averageSalesTaxRate:0.0885,costOfLivingIndex:140,healthcareCostIndex:110,insuranceRisk:"high",hasEstateTax:false,hasInheritanceTax:false,estimated:true,
+  notes:"SS is exempt, but pensions, IRA/401(k) and capital gains are taxed at high progressive rates, and cost of living is very high. Prop 13 keeps effective property-tax rates relatively low."},
+NY:{stateName:"New York",abbreviation:"NY",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:17150,rate:.04},{upTo:23600,rate:.045},{upTo:27900,rate:.0525},{upTo:161550,rate:.055},{upTo:323200,rate:.06},{upTo:2155350,rate:.0685},{upTo:5000000,rate:.0965},{upTo:25000000,rate:.103},{upTo:Infinity,rate:.109}],
+  socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",
+  effectivePropertyTaxRate:0.0140,averageSalesTaxRate:0.0853,costOfLivingIndex:125,healthcareCostIndex:108,insuranceRisk:"medium",hasEstateTax:true,hasInheritanceTax:false,estimated:true,
+  notes:"SS exempt and a pension/retirement exclusion (up to a cap) for those 59½+, but income tax otherwise applies and there is an estate tax with a notable 'cliff'."},
+WA:{stateName:"Washington",abbreviation:"WA",hasStateIncomeTax:false,incomeTaxType:"none",flatIncomeTaxRate:0,progressiveBrackets:[],
+  socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"not taxed",ira401kTaxTreatment:"not taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"special",capGainsThreshold:270000,capGainsRate:0.07,
+  effectivePropertyTaxRate:0.0084,averageSalesTaxRate:0.0940,costOfLivingIndex:110,healthcareCostIndex:106,insuranceRisk:"low",hasEstateTax:true,hasInheritanceTax:false,estimated:false,
+  notes:"No tax on wages or retirement income, but a high sales tax, an estate tax, and a 7% tax on large long-term capital gains above an annual threshold."},
+NV:{stateName:"Nevada",abbreviation:"NV",hasStateIncomeTax:false,incomeTaxType:"none",flatIncomeTaxRate:0,progressiveBrackets:[],
+  socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"not taxed",ira401kTaxTreatment:"not taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"not taxed",
+  effectivePropertyTaxRate:0.0055,averageSalesTaxRate:0.0824,costOfLivingIndex:102,healthcareCostIndex:101,insuranceRisk:"medium",hasEstateTax:false,hasInheritanceTax:false,estimated:false,
+  notes:"No income tax, no estate/inheritance tax, and moderate property tax. Sales tax is on the higher side."},
+AZ:{stateName:"Arizona",abbreviation:"AZ",hasStateIncomeTax:true,incomeTaxType:"flat",flatIncomeTaxRate:0.025,progressiveBrackets:[],
+  socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",
+  effectivePropertyTaxRate:0.0060,averageSalesTaxRate:0.0840,costOfLivingIndex:108,healthcareCostIndex:100,insuranceRisk:"medium",hasEstateTax:false,hasInheritanceTax:false,estimated:false,
+  notes:"Low flat income tax, SS exempt, low property tax. A popular retirement state with a moderate overall tax profile."},
+OR:{stateName:"Oregon",abbreviation:"OR",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:8100,rate:.0475},{upTo:20400,rate:.0675},{upTo:250000,rate:.0875},{upTo:Infinity,rate:.099}],
+  socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",
+  effectivePropertyTaxRate:0.0086,averageSalesTaxRate:0.0000,costOfLivingIndex:113,healthcareCostIndex:104,insuranceRisk:"low",hasEstateTax:true,hasInheritanceTax:false,estimated:true,
+  notes:"No sales tax and SS exempt, but high income-tax rates that reach retirement withdrawals, plus an estate tax with a low ($1M) exemption."},
+/* ---- remaining states (compact) ---- */
+AL:{stateName:"Alabama",abbreviation:"AL",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:1000,rate:.02},{upTo:6000,rate:.04},{upTo:Infinity,rate:.05}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0039,averageSalesTaxRate:0.0925,costOfLivingIndex:89,healthcareCostIndex:98,insuranceRisk:"high",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"Very low property tax and SS exempt; defined-benefit pensions are largely exempt but IRA/401(k) withdrawals are taxed. High sales tax."},
+AK:{stateName:"Alaska",abbreviation:"AK",hasStateIncomeTax:false,incomeTaxType:"none",flatIncomeTaxRate:0,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"not taxed",ira401kTaxTreatment:"not taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"not taxed",effectivePropertyTaxRate:0.0104,averageSalesTaxRate:0.0182,costOfLivingIndex:125,healthcareCostIndex:130,insuranceRisk:"medium",hasEstateTax:false,hasInheritanceTax:false,estimated:false,notes:"No state income or statewide sales tax, but a high cost of living and the nation's highest healthcare costs."},
+AR:{stateName:"Arkansas",abbreviation:"AR",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:5300,rate:.02},{upTo:10600,rate:.03},{upTo:Infinity,rate:.039}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"partially taxed",effectivePropertyTaxRate:0.0061,averageSalesTaxRate:0.0945,costOfLivingIndex:89,healthcareCostIndex:97,insuranceRisk:"high",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"Low cost of living and a retirement-income exclusion, but a high combined sales tax."},
+CO:{stateName:"Colorado",abbreviation:"CO",hasStateIncomeTax:true,incomeTaxType:"flat",flatIncomeTaxRate:0.044,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0049,averageSalesTaxRate:0.0780,costOfLivingIndex:105,healthcareCostIndex:103,insuranceRisk:"high",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"Flat tax with a generous retirement-income deduction for 65+, low property tax, but rising hail/wildfire insurance costs."},
+CT:{stateName:"Connecticut",abbreviation:"CT",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:20000,rate:.02},{upTo:100000,rate:.045},{upTo:200000,rate:.055},{upTo:400000,rate:.06},{upTo:1000000,rate:.065},{upTo:Infinity,rate:.0699}],socialSecurityTaxTreatment:"partially taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0192,averageSalesTaxRate:0.0635,costOfLivingIndex:113,healthcareCostIndex:106,insuranceRisk:"medium",hasEstateTax:true,hasInheritanceTax:false,estimated:true,notes:"Income-tested taxation of SS and retirement income, high property tax, an estate tax, and a high cost of living."},
+DC:{stateName:"District of Columbia",abbreviation:"DC",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:10000,rate:.04},{upTo:40000,rate:.06},{upTo:60000,rate:.065},{upTo:250000,rate:.085},{upTo:500000,rate:.0925},{upTo:1000000,rate:.0975},{upTo:Infinity,rate:.1075}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0055,averageSalesTaxRate:0.0600,costOfLivingIndex:145,healthcareCostIndex:107,insuranceRisk:"low",hasEstateTax:true,hasInheritanceTax:false,estimated:true,notes:"SS exempt but pensions and IRA/401(k) withdrawals taxed at progressive rates; very high cost of living and an estate tax."},
+GA:{stateName:"Georgia",abbreviation:"GA",hasStateIncomeTax:true,incomeTaxType:"flat",flatIncomeTaxRate:0.0539,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0081,averageSalesTaxRate:0.0740,costOfLivingIndex:91,healthcareCostIndex:99,insuranceRisk:"medium",hasEstateTax:false,hasInheritanceTax:false,estimated:false,notes:"Flat income tax with a large retirement-income exclusion for 62+ (and even larger at 65+); SS exempt, low cost of living."},
+HI:{stateName:"Hawaii",abbreviation:"HI",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:4800,rate:.014},{upTo:19200,rate:.055},{upTo:48000,rate:.0725},{upTo:96000,rate:.083},{upTo:300000,rate:.0925},{upTo:Infinity,rate:.11}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"not taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0027,averageSalesTaxRate:0.0450,costOfLivingIndex:180,healthcareCostIndex:108,insuranceRisk:"medium",hasEstateTax:true,hasInheritanceTax:false,estimated:true,notes:"Lowest property tax in the nation and SS/employer pensions exempt, but the highest cost of living, an estate tax, and IRA/401(k) withdrawals taxed."},
+IA:{stateName:"Iowa",abbreviation:"IA",hasStateIncomeTax:true,incomeTaxType:"flat",flatIncomeTaxRate:0.038,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"not taxed",ira401kTaxTreatment:"not taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0143,averageSalesTaxRate:0.0694,costOfLivingIndex:91,healthcareCostIndex:98,insuranceRisk:"medium",hasEstateTax:false,hasInheritanceTax:false,estimated:false,notes:"Now exempts retirement income for those 55+ and has repealed its inheritance tax, with a flat income tax. Property tax is on the higher side."},
+ID:{stateName:"Idaho",abbreviation:"ID",hasStateIncomeTax:true,incomeTaxType:"flat",flatIncomeTaxRate:0.05695,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0056,averageSalesTaxRate:0.0602,costOfLivingIndex:98,healthcareCostIndex:99,insuranceRisk:"low",hasEstateTax:false,hasInheritanceTax:false,estimated:false,notes:"Flat income tax that reaches retirement withdrawals; SS exempt, low property tax, no estate tax."},
+IL:{stateName:"Illinois",abbreviation:"IL",hasStateIncomeTax:true,incomeTaxType:"flat",flatIncomeTaxRate:0.0495,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"not taxed",ira401kTaxTreatment:"not taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0207,averageSalesTaxRate:0.0885,costOfLivingIndex:95,healthcareCostIndex:101,insuranceRisk:"medium",hasEstateTax:true,hasInheritanceTax:false,estimated:false,notes:"Does not tax SS, pensions, or IRA/401(k) withdrawals — but among the highest property taxes in the country, plus an estate tax."},
+IN:{stateName:"Indiana",abbreviation:"IN",hasStateIncomeTax:true,incomeTaxType:"flat",flatIncomeTaxRate:0.03,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0081,averageSalesTaxRate:0.0700,costOfLivingIndex:91,healthcareCostIndex:98,insuranceRisk:"medium",hasEstateTax:false,hasInheritanceTax:false,estimated:false,notes:"Low flat income tax (county taxes add a bit); SS exempt, low cost of living, no estate tax."},
+KS:{stateName:"Kansas",abbreviation:"KS",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:46000,rate:.052},{upTo:Infinity,rate:.0558}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0134,averageSalesTaxRate:0.0870,costOfLivingIndex:87,healthcareCostIndex:98,insuranceRisk:"high",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"SS now exempt, but pensions and IRA/401(k) withdrawals are taxed. Property and sales taxes are on the higher side."},
+KY:{stateName:"Kentucky",abbreviation:"KY",hasStateIncomeTax:true,incomeTaxType:"flat",flatIncomeTaxRate:0.04,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0080,averageSalesTaxRate:0.0600,costOfLivingIndex:93,healthcareCostIndex:98,insuranceRisk:"medium",hasEstateTax:false,hasInheritanceTax:true,estimated:true,notes:"Flat tax with a retirement-income exclusion; SS exempt, low cost of living, but there is an inheritance tax."},
+LA:{stateName:"Louisiana",abbreviation:"LA",hasStateIncomeTax:true,incomeTaxType:"flat",flatIncomeTaxRate:0.03,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0055,averageSalesTaxRate:0.0955,costOfLivingIndex:92,healthcareCostIndex:99,insuranceRisk:"very high",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"Low income and property tax with a retirement exclusion, but the highest combined sales tax and very high hurricane-driven insurance costs."},
+MA:{stateName:"Massachusetts",abbreviation:"MA",hasStateIncomeTax:true,incomeTaxType:"flat",flatIncomeTaxRate:0.05,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0104,averageSalesTaxRate:0.0625,costOfLivingIndex:135,healthcareCostIndex:107,insuranceRisk:"low",hasEstateTax:true,hasInheritanceTax:false,estimated:true,notes:"Flat 5% income tax (plus a 4% surtax over ~$1M) reaching retirement withdrawals; SS exempt, but high cost of living and an estate tax."},
+MD:{stateName:"Maryland",abbreviation:"MD",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:1000,rate:.02},{upTo:2000,rate:.03},{upTo:3000,rate:.04},{upTo:150000,rate:.0475},{upTo:175000,rate:.05},{upTo:225000,rate:.0525},{upTo:300000,rate:.055},{upTo:Infinity,rate:.0575}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0101,averageSalesTaxRate:0.0600,costOfLivingIndex:116,healthcareCostIndex:104,insuranceRisk:"low",hasEstateTax:true,hasInheritanceTax:true,estimated:true,notes:"SS exempt and a pension exclusion, but local 'piggyback' income taxes apply and Maryland is the only state with BOTH an estate and an inheritance tax."},
+ME:{stateName:"Maine",abbreviation:"ME",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:48000,rate:.058},{upTo:113400,rate:.0675},{upTo:Infinity,rate:.0715}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0124,averageSalesTaxRate:0.0550,costOfLivingIndex:111,healthcareCostIndex:103,insuranceRisk:"low",hasEstateTax:true,hasInheritanceTax:false,estimated:true,notes:"SS exempt and a pension deduction, but high property tax, a relatively high cost of living, and an estate tax."},
+MI:{stateName:"Michigan",abbreviation:"MI",hasStateIncomeTax:true,incomeTaxType:"flat",flatIncomeTaxRate:0.0425,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"not taxed",ira401kTaxTreatment:"not taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0131,averageSalesTaxRate:0.0600,costOfLivingIndex:91,healthcareCostIndex:99,insuranceRisk:"low",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"Under Public Act 4 of 2023, Michigan has phased out tax on most retirement income for the 2026 tax year (exempt up to ~$67,610 single / ~$135,220 joint); SS exempt, low cost of living, no estate tax."},
+MN:{stateName:"Minnesota",abbreviation:"MN",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:47620,rate:.0535},{upTo:189180,rate:.068},{upTo:330410,rate:.0785},{upTo:Infinity,rate:.0985}],socialSecurityTaxTreatment:"partially taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0105,averageSalesTaxRate:0.0810,costOfLivingIndex:97,healthcareCostIndex:101,insuranceRisk:"medium",hasEstateTax:true,hasInheritanceTax:false,estimated:true,notes:"One of the few states still partially taxing SS, plus full taxation of pensions/withdrawals and an estate tax."},
+MO:{stateName:"Missouri",abbreviation:"MO",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:1273,rate:0},{upTo:8911,rate:.02},{upTo:Infinity,rate:.047}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0091,averageSalesTaxRate:0.0840,costOfLivingIndex:89,healthcareCostIndex:98,insuranceRisk:"high",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"SS now exempt and a public-pension exclusion; low cost of living and no estate tax."},
+MS:{stateName:"Mississippi",abbreviation:"MS",hasStateIncomeTax:true,incomeTaxType:"flat",flatIncomeTaxRate:0.044,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"not taxed",ira401kTaxTreatment:"not taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"not taxed",effectivePropertyTaxRate:0.0067,averageSalesTaxRate:0.0707,costOfLivingIndex:85,healthcareCostIndex:97,insuranceRisk:"high",hasEstateTax:false,hasInheritanceTax:false,estimated:false,notes:"Does not tax qualified retirement income (SS, pensions, IRA/401(k)); the lowest cost of living in the nation, no estate tax."},
+MT:{stateName:"Montana",abbreviation:"MT",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:41000,rate:.047},{upTo:Infinity,rate:.059}],socialSecurityTaxTreatment:"partially taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"partially taxed",effectivePropertyTaxRate:0.0074,averageSalesTaxRate:0.0000,costOfLivingIndex:95,healthcareCostIndex:101,insuranceRisk:"medium",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"No sales tax and low property tax, but it taxes SS, pensions and withdrawals."},
+NE:{stateName:"Nebraska",abbreviation:"NE",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:7390,rate:.0246},{upTo:44310,rate:.0351},{upTo:71370,rate:.0501},{upTo:Infinity,rate:.052}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0154,averageSalesTaxRate:0.0695,costOfLivingIndex:91,healthcareCostIndex:99,insuranceRisk:"high",hasEstateTax:false,hasInheritanceTax:true,estimated:true,notes:"SS now exempt, but high property tax, taxation of withdrawals, and a county-level inheritance tax."},
+NH:{stateName:"New Hampshire",abbreviation:"NH",hasStateIncomeTax:false,incomeTaxType:"none",flatIncomeTaxRate:0,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"not taxed",ira401kTaxTreatment:"not taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"not taxed",effectivePropertyTaxRate:0.0177,averageSalesTaxRate:0.0000,costOfLivingIndex:110,healthcareCostIndex:103,insuranceRisk:"low",hasEstateTax:false,hasInheritanceTax:false,estimated:false,notes:"No income tax (its interest/dividends tax was repealed in 2025) and no sales tax, but among the highest property taxes."},
+NM:{stateName:"New Mexico",abbreviation:"NM",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:8000,rate:.017},{upTo:16000,rate:.032},{upTo:24000,rate:.047},{upTo:315000,rate:.049},{upTo:Infinity,rate:.059}],socialSecurityTaxTreatment:"partially taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"partially taxed",effectivePropertyTaxRate:0.0067,averageSalesTaxRate:0.0780,costOfLivingIndex:94,healthcareCostIndex:99,insuranceRisk:"medium",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"Income-tested SS taxation and taxes most retirement withdrawals, but low property tax and cost of living."},
+ND:{stateName:"North Dakota",abbreviation:"ND",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:225975,rate:.0195},{upTo:275100,rate:.025},{upTo:Infinity,rate:.025}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"partially taxed",effectivePropertyTaxRate:0.0097,averageSalesTaxRate:0.0704,costOfLivingIndex:95,healthcareCostIndex:99,insuranceRisk:"medium",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"Very low income-tax rates and SS exempt; withdrawals are taxed but at modest rates."},
+OH:{stateName:"Ohio",abbreviation:"OH",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:26050,rate:0},{upTo:100000,rate:.0275},{upTo:Infinity,rate:.035}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0141,averageSalesTaxRate:0.0724,costOfLivingIndex:94,healthcareCostIndex:99,insuranceRisk:"low",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"SS exempt and a retirement-income credit; low income-tax rates but relatively high property tax. No estate tax."},
+OK:{stateName:"Oklahoma",abbreviation:"OK",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:2500,rate:.0025},{upTo:7500,rate:.0175},{upTo:12200,rate:.0375},{upTo:Infinity,rate:.0475}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0085,averageSalesTaxRate:0.0899,costOfLivingIndex:86,healthcareCostIndex:98,insuranceRisk:"high",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"Low cost of living, SS exempt, and a retirement exclusion, but high combined sales tax and tornado/hail insurance risk."},
+RI:{stateName:"Rhode Island",abbreviation:"RI",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:77450,rate:.0375},{upTo:176050,rate:.0475},{upTo:Infinity,rate:.0599}],socialSecurityTaxTreatment:"partially taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0137,averageSalesTaxRate:0.0700,costOfLivingIndex:110,healthcareCostIndex:104,insuranceRisk:"medium",hasEstateTax:true,hasInheritanceTax:false,estimated:true,notes:"Income-tested SS taxation, high property tax, an estate tax with a low exemption, and an above-average cost of living."},
+SC:{stateName:"South Carolina",abbreviation:"SC",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:3460,rate:0},{upTo:17330,rate:.03},{upTo:Infinity,rate:.062}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"partially taxed",effectivePropertyTaxRate:0.0053,averageSalesTaxRate:0.0750,costOfLivingIndex:96,healthcareCostIndex:99,insuranceRisk:"high",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"SS exempt with a sizable retirement deduction for 65+, very low property tax, no estate tax — but coastal insurance can be high."},
+SD:{stateName:"South Dakota",abbreviation:"SD",hasStateIncomeTax:false,incomeTaxType:"none",flatIncomeTaxRate:0,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"not taxed",ira401kTaxTreatment:"not taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"not taxed",effectivePropertyTaxRate:0.0114,averageSalesTaxRate:0.0640,costOfLivingIndex:93,healthcareCostIndex:99,insuranceRisk:"medium",hasEstateTax:false,hasInheritanceTax:false,estimated:false,notes:"No income tax and no estate/inheritance tax; moderate sales tax but somewhat high property tax."},
+TN:{stateName:"Tennessee",abbreviation:"TN",hasStateIncomeTax:false,incomeTaxType:"none",flatIncomeTaxRate:0,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"not taxed",ira401kTaxTreatment:"not taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"not taxed",effectivePropertyTaxRate:0.0056,averageSalesTaxRate:0.0955,costOfLivingIndex:90,healthcareCostIndex:98,insuranceRisk:"medium",hasEstateTax:false,hasInheritanceTax:false,estimated:false,notes:"No income tax, low property tax, no estate/inheritance tax — but the highest combined sales tax in the nation."},
+UT:{stateName:"Utah",abbreviation:"UT",hasStateIncomeTax:true,incomeTaxType:"flat",flatIncomeTaxRate:0.0455,progressiveBrackets:[],socialSecurityTaxTreatment:"partially taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0052,averageSalesTaxRate:0.0720,costOfLivingIndex:103,healthcareCostIndex:99,insuranceRisk:"low",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"Flat tax that reaches SS and withdrawals (offset by an income-tested credit), but low property tax and no estate tax."},
+VA:{stateName:"Virginia",abbreviation:"VA",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:3000,rate:.02},{upTo:5000,rate:.03},{upTo:17000,rate:.05},{upTo:Infinity,rate:.0575}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0080,averageSalesTaxRate:0.0577,costOfLivingIndex:103,healthcareCostIndex:101,insuranceRisk:"low",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"SS exempt and an age-based deduction for 65+, low property and sales tax, no estate tax."},
+VT:{stateName:"Vermont",abbreviation:"VT",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:75000,rate:.0335},{upTo:175000,rate:.066},{upTo:Infinity,rate:.0875}],socialSecurityTaxTreatment:"partially taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0171,averageSalesTaxRate:0.0636,costOfLivingIndex:115,healthcareCostIndex:104,insuranceRisk:"low",hasEstateTax:true,hasInheritanceTax:false,estimated:true,notes:"Income-tested SS taxation, full taxation of withdrawals, high property tax, an estate tax, and a high cost of living."},
+WI:{stateName:"Wisconsin",abbreviation:"WI",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:38190,rate:.035},{upTo:76380,rate:.044},{upTo:420420,rate:.053},{upTo:Infinity,rate:.0765}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"taxed",ira401kTaxTreatment:"taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"partially taxed",effectivePropertyTaxRate:0.0151,averageSalesTaxRate:0.0570,costOfLivingIndex:95,healthcareCostIndex:100,insuranceRisk:"low",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"SS exempt and a partial capital-gains exclusion, but it taxes withdrawals and has high property tax. No estate tax."},
+WV:{stateName:"West Virginia",abbreviation:"WV",hasStateIncomeTax:true,incomeTaxType:"progressive",flatIncomeTaxRate:0,progressiveBrackets:[{upTo:10000,rate:.0222},{upTo:25000,rate:.0296},{upTo:40000,rate:.0333},{upTo:60000,rate:.0444},{upTo:Infinity,rate:.0482}],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"partially excluded",ira401kTaxTreatment:"partially excluded",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"taxed as income",effectivePropertyTaxRate:0.0055,averageSalesTaxRate:0.0655,costOfLivingIndex:90,healthcareCostIndex:99,insuranceRisk:"low",hasEstateTax:false,hasInheritanceTax:false,estimated:true,notes:"Completed its three-year Social Security phase-out — SS is fully exempt for the 2026 tax year. Offers a retirement exclusion; low cost of living and property tax, no estate tax."},
+WY:{stateName:"Wyoming",abbreviation:"WY",hasStateIncomeTax:false,incomeTaxType:"none",flatIncomeTaxRate:0,progressiveBrackets:[],socialSecurityTaxTreatment:"not taxed",pensionTaxTreatment:"not taxed",ira401kTaxTreatment:"not taxed",rothTaxTreatment:"not taxed",capitalGainsTaxTreatment:"not taxed",effectivePropertyTaxRate:0.0055,averageSalesTaxRate:0.0544,costOfLivingIndex:95,healthcareCostIndex:101,insuranceRisk:"low",hasEstateTax:false,hasInheritanceTax:false,estimated:false,notes:"No income tax, low property and sales tax, no estate/inheritance tax — one of the most tax-friendly states for retirees."}
+};
+
+/* Data vintage — surfaced in the header, report, and exports. */
+const DATA_VINTAGE = "May 2026";
+
+/* Local/municipal income-tax notes (modeled as a flag + warning only). */
+STATE_DATA.PA.localTaxNote = "Pennsylvania municipalities levy a local Earned Income Tax, but it generally applies to wages, not Social Security, pensions, or retirement-account withdrawals. Confirm for your specific municipality.";
+STATE_DATA.NY.localTaxNote = "New York City and Yonkers levy their own resident income taxes on top of the state tax. This model does not include them — they can materially change the result if you live there.";
+STATE_DATA.MD.localTaxNote = "Maryland counties levy 'piggyback' local income taxes (roughly 2.25%–3.2%) that DO apply to retirement income. This model does not include them, so Maryland's true income-tax cost is higher than shown.";
+STATE_DATA.OH.localTaxNote = "Many Ohio municipalities and school districts levy local income taxes. These generally apply to earned income rather than retirement income, but confirm locally.";
+
+/* Local taxes that can MATERIALLY change the income-tax result -> shown as a banner. */
+STATE_DATA.MD.localTaxMaterial = "Maryland local income taxes (county 'piggyback' taxes of roughly 2.25%–3.2%) are not included and DO apply to retirement income. Actual income tax may be meaningfully higher than shown.";
+STATE_DATA.NY.localTaxMaterial = "New York City and Yonkers resident income taxes are not included. If you would live in NYC or Yonkers, actual income tax may be meaningfully higher than shown.";
+
+/* ===================== FORMATTING HELPERS ===================== */
+const fmtUSD = (n)=>{
+  if(n===null||n===undefined||isNaN(n)) return "$0";
+  const neg = n<0; const v = Math.round(Math.abs(n));
+  return (neg?"-$":"$")+v.toLocaleString("en-US");
+};
+const fmtPct = (r,dec=2)=> (r*100).toFixed(dec).replace(/\.?0+$/,m=> m.includes('.')?'':m)+"%";
+const fmtPctFixed = (r,dec=2)=> (r*100).toFixed(dec)+"%";
+const esc = (s)=> String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ===================== INCLUSION FRACTIONS ===================== */
+function inclusionFraction(treatment){
+  switch(treatment){
+    case "not taxed": return 0;
+    case "partially excluded":
+    case "partially taxed": return 0.5;
+    case "taxed":
+    case "taxed as income": return 1;
+    default: return 0;
+  }
+}
+const FILING_FACTOR = { single:0.5, mfs:0.5, hoh:0.6, mfj:1.0 };
+
+/* ===================== CALCULATION ENGINE ===================== */
+function calculateAnnualIncome(p){
+  return p.ssIncome + p.pension + p.iraWithdrawals + p.rothWithdrawals + p.dividends + p.ltcg;
+}
+
+function calculateStateTaxableIncome(p, s){
+  if(!s.hasStateIncomeTax) return 0; // none of the ordinary-income items taxed
+  let taxable = 0;
+  taxable += inclusionFraction(s.socialSecurityTaxTreatment) * p.ssIncome;
+  taxable += inclusionFraction(s.pensionTaxTreatment) * p.pension;
+  taxable += inclusionFraction(s.ira401kTaxTreatment) * p.iraWithdrawals;
+  // Roth never taxed
+  taxable += p.dividends; // interest/dividends taxable where income tax exists
+  // capital gains
+  if(s.capitalGainsTaxTreatment === "taxed as income") taxable += p.ltcg;
+  else if(s.capitalGainsTaxTreatment === "partially taxed") taxable += 0.5 * p.ltcg;
+  // "not taxed"/"special" handled outside ordinary income
+  return Math.max(0, taxable);
+}
+
+function calculateStateIncomeTax(taxableIncome, s, filingStatus){
+  if(!s.hasStateIncomeTax) {
+    // Special-case WA capital gains tax (separate from wage income)
+    return 0;
+  }
+  if(s.incomeTaxType === "flat"){
+    return taxableIncome * s.flatIncomeTaxRate;
+  }
+  if(s.incomeTaxType === "progressive" && s.progressiveBrackets.length){
+    const f = FILING_FACTOR[filingStatus] || 1;
+    let tax = 0, lower = 0;
+    for(const b of s.progressiveBrackets){
+      const upper = (b.upTo===Infinity)?Infinity:b.upTo*f;
+      if(taxableIncome > lower){
+        const slice = Math.min(taxableIncome, upper) - lower;
+        if(slice>0) tax += slice * b.rate;
+      }
+      lower = upper;
+      if(taxableIncome <= upper) break;
+    }
+    return tax;
+  }
+  return taxableIncome * (s.flatIncomeTaxRate||0);
+}
+
+// Separate special tax (e.g., WA long-term capital gains tax)
+function calculateSpecialCapGainsTax(p, s){
+  if(s.capitalGainsTaxTreatment === "special" && s.capGainsThreshold!=null){
+    return Math.max(0, p.ltcg - s.capGainsThreshold) * (s.capGainsRate||0);
+  }
+  return 0;
+}
+
+function calculatePropertyTax(p, s){
+  if(p.ownership !== "own") return 0;
+  return Math.max(0,p.homeValue) * s.effectivePropertyTaxRate;
+}
+
+// Share of total spending assumed to be subject to sales tax. Most states
+// exempt groceries/services/housing, so only a portion of a budget is taxed.
+const SALES_TAXABLE_SHARE = 0.55;
+function calculateSalesTax(p, s){
+  const salesTaxableSpending = Math.max(0,p.spending) * SALES_TAXABLE_SHARE;
+  return salesTaxableSpending * s.averageSalesTaxRate;
+}
+
+// Housing cost is state-INDEPENDENT here (the user enters one figure), so it
+// does NOT affect the state ranking. It is reported separately for context.
+function calculateHousingCost(p){
+  if(p.ownership === "rent") return Math.max(0, p.rent||0);
+  return Math.max(0, p.mortgage||0); // owner: cash mortgage outflow (0 if paid off)
+}
+
+const INSURANCE_DEFAULTS = { low:2000, medium:3500, high:6000, "very high":8000 };
+function calculateInsuranceCost(p, s){
+  if(p.ownership !== "own") return 0; // renters: no homeowners insurance modeled
+  if(p.insurance && p.insurance>0) return p.insurance;
+  return INSURANCE_DEFAULTS[s.insuranceRisk] || 3500;
+}
+
+function defaultHealthcare(p){
+  const married = (p.filing==="mfj"||p.filing==="mfs");
+  return married ? 16000 : 8000;
+}
+function healthcareBase(p){
+  return (p.healthcare && p.healthcare>0) ? p.healthcare : defaultHealthcare(p);
+}
+// Relative healthcare adjustment vs the national baseline (can be ±).
+function calculateHealthcareAdjustment(p, s){
+  return healthcareBase(p) * ((s.healthcareCostIndex - 100) / 100);
+}
+
+// Cost-of-living adjustment applies ONLY to non-housing, non-healthcare,
+// non-insurance living spending, so it does not double-count costs that are
+// already modeled separately. It is a relative figure and can be negative.
+function calculateCostOfLivingAdjustment(p, s){
+  const housing = calculateHousingCost(p);
+  const healthcare = healthcareBase(p);
+  const insurance = calculateInsuranceCost(p, s);
+  const baseLiving = Math.max(0, Math.max(0,p.spending) - housing - healthcare - insurance);
+  return baseLiving * ((s.costOfLivingIndex - 100) / 100);
+}
+
+function calculateAnnualStateImpact(p, s){
+  const taxable = calculateStateTaxableIncome(p,s);
+  const incomeTax = calculateStateIncomeTax(taxable, s, p.filing) + calculateSpecialCapGainsTax(p,s);
+  const propertyTax = calculatePropertyTax(p,s);
+  const salesTax = calculateSalesTax(p,s);
+  const ins = calculateInsuranceCost(p,s);
+  const hc = calculateHealthcareAdjustment(p,s);
+  const col = calculateCostOfLivingAdjustment(p,s);
+  // Required costs are always >= 0; the cost-of-living / healthcare adjustments
+  // are relative and can be positive or negative.
+  const requiredCosts = incomeTax + propertyTax + salesTax + ins;
+  const relativeAdj = col + hc;
+  const impact = requiredCosts + relativeAdj; // "Annual state impact" (can be < 0)
+  const housing = calculateHousingCost(p); // reported separately, not in ranking
+  return { incomeTax, propertyTax, salesTax, ins, hc, col, taxable, requiredCosts, relativeAdj, impact, housing };
+}
+
+// Cumulative state impact over the horizon, with annual costs inflated by a
+// flat compounding rate. Sum of a growing annuity:
+//   impact * ((1+i)^n - 1) / i      (i > 0)
+//   impact * n                      (i == 0)
+function calculateCumulativeImpact(p, s, horizon, obj){
+  const annual = (obj||calculateAnnualStateImpact(p,s)).impact;
+  const n = Math.max(1, horizon);
+  const i = Math.max(0, (p.inflation||0)) / 100;
+  const cumulativeImpact = i > 0 ? annual * (Math.pow(1+i, n) - 1) / i : annual * n;
+  return { cumulativeImpact, projected: p.netWorth - cumulativeImpact };
+}
+
+// Modeling confidence: how closely this model captures the state's tax rules
+// (i.e. how simplified the calculation is), NOT whether figures are verified.
+// No-income-tax states are simple to model; progressive states with
+// age/income-based exclusions are the most simplified.
+function stateConfidence(s){
+  if(!s.hasStateIncomeTax) return "High";
+  const hasPartial = [s.socialSecurityTaxTreatment,s.pensionTaxTreatment,s.ira401kTaxTreatment,s.capitalGainsTaxTreatment]
+    .some(t=> t==="partially excluded" || t==="partially taxed");
+  if(s.incomeTaxType==="progressive" && hasPartial) return "Low";
+  return "Medium";
+}
+
+function rankStates(p, selected){
+  const horizon = Math.max(1, p.horizon);
+  const rows = selected.map(abbr=>{
+    const s = STATE_DATA[abbr];
+    const d = calculateAnnualStateImpact(p,s);
+    const nw = calculateCumulativeImpact(p,s,horizon,d);
+    return {
+      abbr, s, ...d,
+      confidence: stateConfidence(s),
+      cumulativeImpact: nw.cumulativeImpact,
+      projected: nw.projected
+    };
+  });
+  rows.sort((a,b)=>{
+    if(b.projected !== a.projected) return b.projected - a.projected;       // higher remaining NW first
+    if(a.impact !== b.impact) return a.impact - b.impact;                   // lower annual impact
+    if(a.incomeTax !== b.incomeTax) return a.incomeTax - b.incomeTax;       // lower income tax
+    if(a.propertyTax !== b.propertyTax) return a.propertyTax - b.propertyTax; // lower property tax
+    const estA = (a.s.hasEstateTax||a.s.hasInheritanceTax)?1:0;
+    const estB = (b.s.hasEstateTax||b.s.hasInheritanceTax)?1:0;
+    if(estA !== estB) return estA - estB;                                   // no estate/inheritance preferred
+    return a.s.costOfLivingIndex - b.s.costOfLivingIndex;                   // lower COL
+  });
+  rows.forEach((r,i)=> r.rank = i+1);
+  return rows;
+}
+
+/* ===================== VERDICT LOGIC ===================== */
+function verdictFor(p, r, rows){
+  const labels = [];
+  const s = r.s;
+  const isBest = r.rank===1;
+  const isWorst = r.rank===rows.length;
+  const homeOwner = p.ownership==="own";
+  const bigIra = p.iraBalance >= 1500000 || p.iraWithdrawals >= 100000;
+  const rothHeavy = p.rothBalance > (p.iraBalance + p.brokerage) && p.rothBalance>0;
+
+  if(isBest) labels.push({t:"Best overall fit",c:"v-good"});
+  if(!s.hasStateIncomeTax) labels.push({t:"Strong tax state",c:"v-good"});
+  if(s.hasStateIncomeTax && (s.ira401kTaxTreatment==="not taxed") && (s.pensionTaxTreatment==="not taxed"))
+    labels.push({t:"Retirement income friendly",c:"v-good"});
+  if(!s.hasStateIncomeTax && homeOwner && r.propertyTax > r.salesTax*1.5)
+    labels.push({t:"Low income tax, watch property tax",c:"v-warn"});
+  if(homeOwner && r.propertyTax >= 12000) labels.push({t:"High property tax",c:"v-warn"});
+  if(r.col >= p.spending*0.08) labels.push({t:"High cost-of-living burden",c:"v-warn"});
+  if(s.hasEstateTax) labels.push({t:"Estate tax risk",c:"v-warn"});
+  if(s.hasInheritanceTax) labels.push({t:"Inheritance tax risk",c:"v-warn"});
+  if(bigIra && (s.ira401kTaxTreatment==="taxed")) labels.push({t:"Risky for large IRA balances",c:"v-bad"});
+  if(rothHeavy) labels.push({t:"Better for Roth-heavy retirees",c:"v-good"});
+  if(!homeOwner && !s.hasStateIncomeTax) labels.push({t:"Good if renting",c:"v-good"});
+  if(isWorst && rows.length>1) labels.push({t:"Expensive for this profile",c:"v-bad"});
+
+  // de-dup by text
+  const seen=new Set(); const out=[];
+  for(const l of labels){ if(!seen.has(l.t)){seen.add(l.t);out.push(l);} }
+  if(!out.length) out.push({t:"Balanced profile",c:"v-neutral"});
+  return out.slice(0,3);
+}
+
+/* ===================== RED FLAGS ===================== */
+function generateRedFlags(p, s, r){
+  const flags=[];
+  const homeOwner = p.ownership==="own";
+  const push=(sev,title,text)=> flags.push({sev,title,text});
+
+  if(inclusionFraction(s.socialSecurityTaxTreatment)>0 && p.ssIncome>0)
+    push("high","Taxes Social Security",`${s.stateName} taxes at least part of Social Security benefits. With ${fmtUSD(p.ssIncome)}/yr in benefits, that adds to your state tax bill.`);
+  if(inclusionFraction(s.ira401kTaxTreatment)>=1 && p.iraWithdrawals>0)
+    push("high","Taxes IRA/401(k) withdrawals",`Your ${fmtUSD(p.iraWithdrawals)}/yr of traditional withdrawals are fully taxable here, which is a recurring annual drag.`);
+  else if(inclusionFraction(s.ira401kTaxTreatment)>0 && p.iraWithdrawals>0)
+    push("med","Partially taxes IRA/401(k) withdrawals",`Part of your ${fmtUSD(p.iraWithdrawals)}/yr of traditional withdrawals may be taxable after exclusions.`);
+  if(inclusionFraction(s.pensionTaxTreatment)>=1 && p.pension>0)
+    push("med","Taxes pension income",`Your ${fmtUSD(p.pension)}/yr pension is taxed as income in ${s.stateName}.`);
+  if(homeOwner && r.propertyTax >= 12000)
+    push("high","High property tax",`At an effective rate near ${fmtPct(s.effectivePropertyTaxRate)}, your home implies about ${fmtUSD(r.propertyTax)}/yr in property tax.`);
+  else if(homeOwner && s.effectivePropertyTaxRate>=0.015)
+    push("med","Elevated property tax",`${s.stateName}'s effective property-tax rate (~${fmtPct(s.effectivePropertyTaxRate)}) is above the national norm.`);
+  if(s.averageSalesTaxRate >= 0.085)
+    push("med","High sales tax",`Combined sales tax averages about ${fmtPct(s.averageSalesTaxRate)} here, which adds up across everyday spending.`);
+  if(s.costOfLivingIndex >= 115)
+    push("high","High cost of living",`Cost of living runs roughly ${s.costOfLivingIndex-100}% above the national baseline, so your ${fmtUSD(p.spending)}/yr budget stretches less.`);
+  else if(s.costOfLivingIndex >= 108)
+    push("med","Above-average cost of living",`Cost of living is about ${s.costOfLivingIndex-100}% above baseline.`);
+  if(s.healthcareCostIndex >= 107)
+    push("med","High healthcare cost","Healthcare costs here run meaningfully above the national average.");
+  if(homeOwner && (s.insuranceRisk==="high"||s.insuranceRisk==="very high"))
+    push(s.insuranceRisk==="very high"?"high":"med","High home insurance risk",`${s.stateName} carries ${s.insuranceRisk} property-insurance risk; default modeled premium is ${fmtUSD(INSURANCE_DEFAULTS[s.insuranceRisk])}/yr.`);
+  if(s.hasEstateTax)
+    push(p.netWorth>=2000000?"high":"med","Estate tax risk",`${s.stateName} levies a state estate tax. With a ${fmtUSD(p.netWorth)} net worth, review exemption thresholds.`);
+  if(s.hasInheritanceTax)
+    push(p.netWorth>=2000000?"high":"med","Inheritance tax risk",`${s.stateName} has an inheritance tax that can apply to what heirs receive depending on their relationship to you.`);
+  if(s.localTaxNote)
+    push("med","Local income tax may apply",s.localTaxNote);
+  // Age-gated retirement exclusions: many states' partial exclusions only apply
+  // at 59½/62/65. Below that, withdrawals may be taxed more than this model shows.
+  const hasAgeGatedExclusion = [s.pensionTaxTreatment,s.ira401kTaxTreatment]
+    .some(t=> t==="partially excluded") && s.hasStateIncomeTax;
+  if(hasAgeGatedExclusion && p.age < 65 && (p.iraWithdrawals>0 || p.pension>0))
+    push("med","Age-based retirement exclusion","This state's retirement-income exclusions are often age-gated (commonly 59½, 62, or 65). At age "+p.age+", your actual exclusion may be smaller than this simplified model assumes.");
+
+  return flags;
+}
+
+/* ===================== RECOMMENDATION ===================== */
+function netWorthBand(nw){
+  if(nw < 1000000) return {key:"u1", label:"Under $1,000,000",
+    focus:"cost of living, rent, property tax, and healthcare costs"};
+  if(nw < 2000000) return {key:"1to2", label:"$1,000,000 – $2,000,000",
+    focus:"state income tax, property tax, and your retirement withdrawal strategy"};
+  if(nw < 5000000) return {key:"2to5", label:"$2,000,000 – $5,000,000",
+    focus:"IRA/401(k) withdrawal taxation, RMD exposure, property tax, Medicare IRMAA awareness, and estate or inheritance tax risk"};
+  return {key:"o5", label:"Above $5,000,000",
+    focus:"estate tax, inheritance tax, capital gains, large IRA balances, property tax, and multi-state planning risk"};
+}
+
+function generateRecommendation(p, rows){
+  const best = rows[0];
+  const worst = rows[rows.length-1];
+  const horizon = Math.max(1,p.horizon);
+  const annualDiff = worst.impact - best.impact;
+  const horizonDiff = worst.cumulativeImpact - best.cumulativeImpact;
+  const band = netWorthBand(p.netWorth);
+
+  // superlatives
+  const pureTax = [...rows].sort((a,b)=> a.incomeTax - b.incomeTax)[0];
+  const lowCost = [...rows].sort((a,b)=> (a.col+a.salesTax+a.hc) - (b.col+b.salesTax+b.hc))[0];
+  const hiddenCost = [...rows].sort((a,b)=> (b.propertyTax+b.ins+b.salesTax) - (a.propertyTax+a.ins+a.salesTax))[0];
+  // looks cheap but isn't: no income tax yet high impact
+  const looksCheap = [...rows].filter(r=>!r.s.hasStateIncomeTax).sort((a,b)=> b.impact-a.impact)[0];
+  // looks expensive but tax friendly: has income tax but low income tax due to retirement treatment
+  const looksPricey = [...rows].filter(r=>r.s.hasStateIncomeTax).sort((a,b)=> a.incomeTax-b.incomeTax)[0];
+
+  let html = `<span class="band">Net-worth band: ${band.label}</span>`;
+  html += `<p>Across the states you compared over a ${horizon}-year horizon, <strong>${best.s.stateName}</strong> comes out ahead, leaving an estimated <strong>${fmtUSD(best.projected)}</strong> versus <strong>${fmtUSD(worst.projected)}</strong> in ${worst.s.stateName} — a gap of about <strong>${fmtUSD(horizonDiff)}</strong> (${fmtUSD(annualDiff)} per year).</p>`;
+
+  // net-worth-band commentary
+  html += `<p>At your net worth, the factors that matter most are ${band.focus}.</p>`;
+
+  // headline structured read
+  html += `<h3>How the states stack up</h3><ul>`;
+  html += `<li><b>Best overall:</b> ${best.s.stateName} — lowest total annual state impact for your specific mix of income, housing, and spending.</li>`;
+  html += `<li><b>Best on pure income tax:</b> ${pureTax.s.stateName} (${fmtUSD(pureTax.incomeTax)}/yr of modeled state income tax).</li>`;
+  html += `<li><b>Lowest day-to-day cost:</b> ${lowCost.s.stateName} — best combination of cost of living, sales tax, and healthcare.</li>`;
+  html += `<li><b>Highest hidden costs:</b> ${hiddenCost.s.stateName} — property tax, insurance, and sales tax add ${fmtUSD(hiddenCost.propertyTax+hiddenCost.ins+hiddenCost.salesTax)}/yr.</li>`;
+  if(looksCheap && looksCheap.impact > best.impact*1.05)
+    html += `<li><b>Looks cheap but may not be:</b> ${looksCheap.s.stateName} has no state income tax, yet its total annual impact is ${fmtUSD(looksCheap.impact)}/yr once property tax, insurance, and other costs are counted.</li>`;
+  if(looksPricey && pureTax.s.hasStateIncomeTax===false && looksPricey.incomeTax < worst.incomeTax)
+    html += `<li><b>Looks expensive but is retiree-friendly:</b> ${looksPricey.s.stateName} has an income tax on paper, but its retirement-income treatment keeps your modeled state income tax to about ${fmtUSD(looksPricey.incomeTax)}/yr.</li>`;
+  html += `</ul>`;
+
+  // personalized drivers
+  html += `<h3>What's driving your result</h3>`;
+  const drivers=[];
+  if(p.iraWithdrawals >= 60000)
+    drivers.push(`Because your plan uses ${fmtUSD(p.iraWithdrawals)}/yr from traditional retirement accounts, states that tax IRA and 401(k) withdrawals create a real annual drag — that single factor reshuffles the ranking.`);
+  if(p.ownership==="own" && p.homeValue >= 750000)
+    drivers.push(`Because your home value is ${fmtUSD(p.homeValue)}, property tax can matter as much as income tax. A no-income-tax state is not automatically the lowest-cost state once the property-tax bill is included.`);
+  const rothShare = p.rothWithdrawals / Math.max(1, calculateAnnualIncome(p));
+  if(rothShare >= 0.4 || (p.rothBalance > (p.iraBalance+p.brokerage) && p.rothBalance>0))
+    drivers.push(`Because much of your retirement income comes from Roth accounts, state income tax matters less — Roth withdrawals are generally not state-taxed. Property tax, insurance, and cost of living become the bigger drivers.`);
+  if(p.netWorth >= 5000000)
+    drivers.push(`Because your net worth is above $5 million, estate and inheritance tax rules should be reviewed before choosing a state — at this level they can outweigh annual income-tax differences.`);
+  if(p.ssIncome===0)
+    drivers.push(`You reported no Social Security income, so SS taxation is not a meaningful factor in your comparison.`);
+  if(p.ownership==="rent")
+    drivers.push(`Because you rent, property tax and homeowners insurance are zero in every state — so cost of living, sales tax, and healthcare decide the ranking instead. Your rent is the same wherever you go, so it does not change which state ranks best.`);
+  if(!drivers.length)
+    drivers.push(`Your income is reasonably balanced across sources, so the ranking is driven by the combination of income tax, property tax, and cost of living rather than any single factor.`);
+  for(const d of drivers) html += `<p>${d}</p>`;
+
+  // example-tone narrative on the actual best/worst
+  html += `<h3>Plain-English takeaway</h3>`;
+  html += `<p>${narrativeTakeaway(p, rows)}</p>`;
+
+  return html;
+}
+
+function narrativeTakeaway(p, rows){
+  const parts = rows.map(r=>{
+    const s=r.s;
+    if(!s.hasStateIncomeTax){
+      let t = `${s.stateName} wins on income tax because it does not tax wages or retirement income`;
+      if(r.propertyTax >= 12000) t += `, but it is not automatically cheapest — property tax runs about ${fmtUSD(r.propertyTax)}/yr`;
+      else if(s.insuranceRisk==="very high"||s.insuranceRisk==="high") t += `, though higher home-insurance risk offsets some of that benefit`;
+      return t + ".";
+    }
+    if(s.ira401kTaxTreatment==="not taxed" && s.pensionTaxTreatment==="not taxed"){
+      return `${s.stateName} may be surprisingly strong for retirees because many retirement distributions are not taxed at the state level` + (s.hasInheritanceTax?", though its inheritance tax is worth reviewing":"") + ".";
+    }
+    if(s.ira401kTaxTreatment==="taxed"){
+      return `${s.stateName} can carry higher annual drag because IRA/401(k) withdrawals${inclusionFraction(s.socialSecurityTaxTreatment)>0?" and part of Social Security":""} are taxed` + (s.costOfLivingIndex>=115?", on top of a high cost of living":"") + ".";
+    }
+    return `${s.stateName} sits in the middle — an income tax applies, but retirement-income exclusions soften it.`;
+  });
+  return parts.join(" ");
+}
+
+/* ===================== TAX-TREATMENT DISPLAY ===================== */
+function ssDisplay(t){ if(t==="not taxed")return['no','No']; if(t==="taxed")return['yes','Yes']; return['partial','Partial']; }
+function incDisplay(t){ if(t==="not taxed")return['no','No']; if(t==="taxed"||t==="taxed as income")return['yes','Yes']; return['partial','Partial']; }
+function cgDisplay(t){
+  if(t==="not taxed")return['no','No'];
+  if(t==="taxed as income")return['yes','As income'];
+  if(t==="partially taxed")return['partial','Partial'];
+  if(t==="special")return['partial','Large gains'];
+  return['partial','—'];
+}
+
+/* ===================== STATE & UI ===================== */
+const FIELDS = [
+  {group:"Household"},
+  {k:"filing",label:"Filing status",type:"select",opts:[["single","Single"],["mfj","Married filing jointly"],["mfs","Married filing separately"],["hoh","Head of household"]]},
+  {k:"age",label:"Current age",type:"int"},
+  {k:"retireAge",label:"Retirement age",type:"int"},
+  {k:"horizon",label:"Planning horizon (years)",type:"int"},
+  {k:"inflation",label:"Annual inflation on costs (%)",type:"pct"},
+  {group:"Balances"},
+  {k:"netWorth",label:"Total net worth",type:"money"},
+  {k:"brokerage",label:"Taxable brokerage balance",type:"money"},
+  {k:"iraBalance",label:"Traditional 401(k)/IRA balance",type:"money"},
+  {k:"rothBalance",label:"Roth IRA / Roth 401(k) balance",type:"money"},
+  {k:"cash",label:"Cash balance",type:"money"},
+  {group:"Annual income"},
+  {k:"ssIncome",label:"Social Security income",type:"money"},
+  {k:"pension",label:"Pension income",type:"money"},
+  {k:"iraWithdrawals",label:"Traditional IRA/401(k) withdrawals",type:"money"},
+  {k:"rothWithdrawals",label:"Roth withdrawals",type:"money"},
+  {k:"dividends",label:"Brokerage dividends & interest",type:"money"},
+  {k:"ltcg",label:"Long-term capital gains",type:"money"},
+  {group:"Spending & housing"},
+  {k:"spending",label:"Annual retirement spending need",type:"money"},
+  {k:"ownership",label:"Own or rent",type:"select",opts:[["own","Own"],["rent","Rent"]]},
+  {k:"homeValue",label:"Home value",type:"money",showIf:p=>p.ownership==="own"},
+  {k:"rent",label:"Annual rent",type:"money",showIf:p=>p.ownership==="rent"},
+  {k:"mortgage",label:"Annual mortgage payment (optional)",type:"money",showIf:p=>p.ownership==="own"},
+  {note:"Housing cost is shown for context. It is not used to rank states unless state-specific rent or home-price assumptions are added later."},
+  {group:"Optional costs"},
+  {k:"healthcare",label:"Annual healthcare premium (optional)",type:"money"},
+  {k:"insurance",label:"Annual property insurance (optional)",type:"money",showIf:p=>p.ownership==="own"}
+];
+
+const SAMPLE = {
+  filing:"mfj", age:55, retireAge:55, horizon:25, inflation:2.5,
+  netWorth:3500000, brokerage:900000, iraBalance:1300000, rothBalance:200000, cash:100000,
+  ssIncome:60000, pension:0, iraWithdrawals:80000, rothWithdrawals:0, dividends:30000, ltcg:20000,
+  spending:150000, ownership:"own", homeValue:1000000, rent:0, mortgage:0,
+  healthcare:16000, insurance:0
+};
+
+const PRESETS = [
+  {label:"PA · NJ · FL · TX", states:["PA","NJ","FL","TX"]},
+  {label:"CA · TX · FL · NV", states:["CA","TX","FL","NV"]},
+  {label:"NY · FL · NC · PA", states:["NY","FL","NC","PA"]},
+  {label:"WA · OR · AZ · NV", states:["WA","OR","AZ","NV"]},
+  {label:"NJ · DE · PA · MD", states:["NJ","DE","PA","MD"]}
+];
+
+let profile = {...SAMPLE};
+let selectedStates = ["PA","NJ","FL","TX"];
+
+/* ---------- build form ---------- */
+function buildForm(){
+  const grid = document.getElementById("formgrid");
+  grid.innerHTML = "";
+  for(const f of FIELDS){
+    if(f.group){
+      const h = document.createElement("div");
+      h.className="fieldgroup-title"; h.textContent=f.group; grid.appendChild(h);
+      continue;
+    }
+    if(f.note){
+      const d = document.createElement("div");
+      d.className="field-note"; d.textContent=f.note; grid.appendChild(d);
+      continue;
+    }
+    const wrap = document.createElement("label");
+    wrap.className="f"; wrap.dataset.k=f.k;
+    if(f.showIf && !f.showIf(profile)) wrap.classList.add("hidden");
+    const lbl = document.createElement("span"); lbl.className="lbl"; lbl.textContent=f.label;
+    wrap.appendChild(lbl);
+    let input;
+    if(f.type==="select"){
+      input = document.createElement("select");
+      for(const [v,t] of f.opts){
+        const o=document.createElement("option"); o.value=v; o.textContent=t; input.appendChild(o);
+      }
+      input.value = profile[f.k];
+    } else {
+      input = document.createElement("input");
+      input.type="text"; input.inputMode= f.type==="money"?"numeric":"numeric";
+      input.className="num-in";
+      input.value = f.type==="money" ? fmtUSD(profile[f.k]) : profile[f.k];
+    }
+    input.dataset.k=f.k; input.dataset.type=f.type;
+    input.addEventListener("change", onFieldChange);
+    if(f.type!=="select") input.addEventListener("focus",()=>{
+      const raw = parseNum(input.value); input.value = raw;
+    });
+    wrap.appendChild(input);
+    const err=document.createElement("span"); err.className="err-msg hidden"; err.dataset.err=f.k;
+    wrap.appendChild(err);
+    grid.appendChild(wrap);
+  }
+}
+function parseNum(s){ if(typeof s==="number")return s; return Number(String(s).replace(/[^0-9.\-]/g,""))||0; }
+
+function onFieldChange(e){
+  const k=e.target.dataset.k, type=e.target.dataset.type;
+  if(type==="select"){ profile[k]=e.target.value; }
+  else { let v=parseNum(e.target.value); profile[k]= type==="int"? Math.round(v): v;
+    e.target.value = type==="money"? fmtUSD(profile[k]) : profile[k]; }
+  // toggle conditional fields
+  document.querySelectorAll("label.f[data-k]").forEach(w=>{
+    const f = FIELDS.find(x=>x.k===w.dataset.k);
+    if(f && f.showIf){ w.classList.toggle("hidden", !f.showIf(profile)); }
+  });
+}
+
+/* ---------- build state selector ---------- */
+function buildStateGrid(){
+  const grid=document.getElementById("stateGrid");
+  grid.innerHTML="";
+  const keys = Object.keys(STATE_DATA).sort((a,b)=> STATE_DATA[a].stateName.localeCompare(STATE_DATA[b].stateName));
+  for(const k of keys){
+    const s=STATE_DATA[k];
+    const chip=document.createElement("label");
+    chip.className="state-chip"+(selectedStates.includes(k)?" sel":"");
+    chip.innerHTML=`<input type="checkbox" ${selectedStates.includes(k)?"checked":""} value="${k}"> <span>${esc(s.stateName)}</span>`;
+    const cb=chip.querySelector("input");
+    cb.addEventListener("change",()=>{
+      if(cb.checked){ if(selectedStates.length>=4){ cb.checked=false; toast("Maximum of 4 states."); return;} selectedStates.push(k); }
+      else { selectedStates = selectedStates.filter(x=>x!==k); }
+      chip.classList.toggle("sel",cb.checked);
+      updateSelCount();
+    });
+    grid.appendChild(chip);
+  }
+  updateSelCount();
+}
+function updateSelCount(){
+  const el=document.getElementById("selCount");
+  const n=selectedStates.length;
+  el.textContent = `${n} selected — ${selectedStates.map(k=>STATE_DATA[k].abbreviation).join(", ")||"none"}`;
+  el.classList.toggle("bad", n<2||n>4);
+}
+function buildPresets(){
+  const wrap=document.getElementById("presets");
+  PRESETS.forEach(p=>{
+    const b=document.createElement("button");
+    b.className="preset-btn"; b.textContent=p.label;
+    b.addEventListener("click",()=>{ selectedStates=[...p.states]; buildStateGrid(); });
+    wrap.appendChild(b);
+  });
+}
+
+/* ---------- validation ---------- */
+function validate(){
+  let ok=true; const errs={};
+  document.querySelectorAll("[data-err]").forEach(e=>{e.classList.add("hidden");e.textContent="";});
+  const setErr=(k,msg)=>{ const e=document.querySelector(`[data-err="${k}"]`); if(e){e.textContent=msg;e.classList.remove("hidden");} ok=false; errs[k]=msg; };
+
+  if(profile.netWorth<0) setErr("netWorth","Total net worth cannot be negative.");
+  if(profile.horizon<1) setErr("horizon","Planning horizon must be at least 1 year.");
+  if(profile.inflation<0 || profile.inflation>15) setErr("inflation","Use an inflation rate between 0 and 15%.");
+  if(profile.ownership==="own" && profile.homeValue<0) setErr("homeValue","Home value cannot be negative.");
+  if(profile.spending<0) setErr("spending","Annual spending cannot be negative.");
+  ["ssIncome","pension","iraWithdrawals","rothWithdrawals","dividends","ltcg"].forEach(k=>{
+    if(profile[k]<0) setErr(k,"This value cannot be negative.");
+  });
+  if(selectedStates.length<2){ toast("Select at least 2 states."); document.getElementById("selCount").classList.add("bad"); ok=false; }
+  if(selectedStates.length>4){ toast("Select no more than 4 states."); ok=false; }
+  return ok;
+}
+
+/* ===================== RENDER REPORT ===================== */
+let lastRows=null;
+
+function calculate(){
+  if(!validate()) return;
+  const rows = rankStates(profile, selectedStates);
+  lastRows = rows;
+  renderReport(rows);
+  document.getElementById("report").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function renderReport(rows){
+  const p=profile, horizon=Math.max(1,p.horizon);
+  const best=rows[0], worst=rows[rows.length-1];
+  const annualDiff = worst.impact - best.impact;
+  const horizonDiff = worst.cumulativeImpact - best.cumulativeImpact;
+  const signed = v => (v<0?"−":"")+fmtUSD(Math.abs(v));
+  const numCell = v => `<td class="cell-num ${v<0?'neg':''}">${signed(v)}</td>`;
+  const housing = calculateHousingCost(p);
+
+  const rep=document.getElementById("report");
+  rep.className=""; // remove empty-state
+  let h="";
+
+  /* profile readout */
+  h+=`<div class="section"><h2><span class="n">P</span> Profile Summary</h2><div class="panel"><div class="profile-readout">${profileReadout(p)}</div></div></div>`;
+
+  /* summary cards */
+  h+=`<div class="section"><h2><span class="n">3</span> Results Summary</h2><div class="cards">
+    <div class="card accent-good"><div class="k">Best State</div><div class="v">${esc(best.s.stateName)}</div><div class="sub">Lowest annual state impact</div></div>
+    <div class="card accent-bad"><div class="k">Worst State</div><div class="v">${esc(worst.s.stateName)}</div><div class="sub">Highest annual state impact</div></div>
+    <div class="card accent-gold"><div class="k">Annual Impact Difference</div><div class="v">${fmtUSD(annualDiff)}</div><div class="sub">Best vs worst, per year</div></div>
+    <div class="card accent-gold"><div class="k">${horizon}-Year Difference</div><div class="v">${fmtUSD(horizonDiff)}</div><div class="sub">Inflated at ${p.inflation||0}%/yr over horizon</div></div>
+    <div class="card accent-ink"><div class="k">Net Worth — ${esc(best.s.abbreviation)}</div><div class="v">${fmtUSD(best.projected)}</div><div class="sub">State-adjusted estimate</div></div>
+    <div class="card accent-ink"><div class="k">Net Worth — ${esc(worst.s.abbreviation)}</div><div class="v">${fmtUSD(worst.projected)}</div><div class="sub">State-adjusted estimate</div></div>
+  </div></div>`;
+
+  /* material local-tax warning banner (e.g., Maryland, NYC/Yonkers) */
+  const material = rows.filter(r=> r.s.localTaxMaterial);
+  if(material.length){
+    h+=`<div class="section"><div class="warn-banner"><span class="wb-title">⚠ Local income taxes not included</span>${material.map(r=>`<div><strong>${esc(r.s.stateName)}:</strong> ${esc(r.s.localTaxMaterial)}</div>`).join("")}</div></div>`;
+  }
+
+  /* ranking table */
+  h+=`<div class="section"><h2><span class="n">4</span> State Ranking</h2><p class="hint">Ranked by state-adjusted net worth after total annual state impact, shown as <strong>cumulative state impact, inflated annually</strong> at ${p.inflation||0}%/yr over ${horizon} years. <strong>Annual state impact</strong> = required costs (income, property, sales tax + insurance, always positive) plus relative cost-of-living and healthcare adjustments versus a national baseline, which can be <span class="neg">negative</span> for low-cost states. The cumulative figure inflates only this state-specific impact, not your full retirement spending.</p>`;
+  h+=`<div class="tablewrap"><table><thead><tr>
+    <th class="left">Rank</th><th class="left">State</th><th class="left">Modeling<br>Conf.</th><th>Income Tax</th><th>Property Tax</th><th>Sales Tax</th><th>Insurance</th><th>Cost-of-Living Adj.</th><th>Healthcare Adj.</th><th class="left">Estate/Inh.</th><th>Annual Impact</th><th>Cumulative Impact<br>(inflated)</th><th>State-Adj. Net Worth Est.</th><th class="left">Verdict</th>
+  </tr></thead><tbody>`;
+  rows.forEach(r=>{
+    const rb = r.rank===1?"rank-1":(r.rank===rows.length?"rank-last":"rank-mid");
+    const estFlag = (r.s.hasEstateTax?"Estate":"")+(r.s.hasEstateTax&&r.s.hasInheritanceTax?" + ":"")+(r.s.hasInheritanceTax?"Inherit.":"");
+    const verds = verdictFor(p,r,rows).map(v=>`<span class="verdict ${v.c}">${v.t}</span>`).join(" ");
+    h+=`<tr>
+      <td class="left"><span class="rankbadge ${rb}">${r.rank}</span></td>
+      <td class="left statecell">${esc(r.s.stateName)}<span class="abbr">${r.s.abbreviation}</span>${r.s.estimated?'<span class="est-tag">EST</span>':''}</td>
+      <td class="left"><span class="conf conf-${r.confidence}">${r.confidence}</span></td>
+      <td class="cell-num">${fmtUSD(r.incomeTax)}</td>
+      <td class="cell-num">${fmtUSD(r.propertyTax)}</td>
+      <td class="cell-num">${fmtUSD(r.salesTax)}</td>
+      <td class="cell-num">${fmtUSD(r.ins)}</td>
+      ${numCell(r.col)}
+      ${numCell(r.hc)}
+      <td class="left">${estFlag?`<span class="yes">${estFlag}</span>`:`<span class="no">None</span>`}</td>
+      <td class="cell-num ${r.impact<0?'neg':''}"><strong>${signed(r.impact)}</strong></td>
+      <td class="cell-num ${r.cumulativeImpact<0?'neg':''}">${signed(r.cumulativeImpact)}</td>
+      <td class="cell-num"><strong>${fmtUSD(r.projected)}</strong></td>
+      <td class="left">${verds}</td>
+    </tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  h+=`<div class="assump"><strong>How to read this:</strong> Sales tax assumes ${Math.round(SALES_TAXABLE_SHARE*100)}% of your ${fmtUSD(p.spending)}/yr spending is taxable (groceries, housing, and many services are commonly exempt). The cost-of-living adjustment is applied only to living spending after removing housing, healthcare, and insurance, to avoid double-counting. ${housing>0?`Your ${fmtUSD(housing)}/yr housing ${p.ownership==='rent'?'rent':'mortgage'} is the same in every state, so it is not counted as a state-specific cost. It is removed from the cost-of-living base so that a fixed payment is not inflated or discounted by a state's cost-of-living index.`:''}</div></div>`;
+
+  /* tax breakdown table */
+  h+=`<div class="section"><h2><span class="n">5</span> Tax Treatment by State</h2>`;
+  h+=`<div class="tablewrap"><table><thead><tr>
+    <th class="left">State</th><th class="left">Modeling Confidence</th><th class="left">Social Security</th><th class="left">Pension</th><th class="left">IRA/401(k)</th><th class="left">Roth</th><th class="left">Interest/Div.</th><th class="left">LT Cap Gains</th><th class="left">Estate Tax</th><th class="left">Inheritance Tax</th>
+  </tr></thead><tbody>`;
+  rows.forEach(r=>{
+    const s=r.s;
+    const ss=ssDisplay(s.socialSecurityTaxTreatment), pen=incDisplay(s.pensionTaxTreatment), ira=incDisplay(s.ira401kTaxTreatment);
+    const idv = s.hasStateIncomeTax?['yes','Yes']:['no','No'];
+    const cg=cgDisplay(s.capitalGainsTaxTreatment);
+    const cell=(d)=>`<td class="left"><span class="${d[0]}">${d[1]}</span></td>`;
+    h+=`<tr><td class="left statecell">${esc(s.stateName)}<span class="abbr">${s.abbreviation}</span></td>
+      <td class="left"><span class="conf conf-${r.confidence}">${r.confidence}</span></td>
+      ${cell(ss)}${cell(pen)}${cell(ira)}<td class="left"><span class="no">No</span></td>${cell(idv)}${cell(cg)}
+      <td class="left"><span class="${s.hasEstateTax?'yes':'no'}">${s.hasEstateTax?'Yes':'No'}</span></td>
+      <td class="left"><span class="${s.hasInheritanceTax?'yes':'no'}">${s.hasInheritanceTax?'Yes':'No'}</span></td></tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  h+=`<div class="assump"><strong>Modeling confidence</strong> reflects how closely this model captures a state's tax rules — how simplified the calculation is — not whether the underlying figures have been independently verified or how good the state is. <span class="conf conf-High">High</span> — no state income tax, little to model. <span class="conf conf-Medium">Medium</span> — flat or simple income tax, rates approximated. <span class="conf conf-Low">Low</span> — progressive brackets plus age- or income-based retirement exclusions and phaseouts that this tool simplifies.</div></div>`;
+
+  /* red flags */
+  h+=`<div class="section no-print"><h2><span class="n">6</span> Red Flags by State</h2><div class="flagcols">`;
+  rows.forEach(r=>{
+    const flags=generateRedFlags(p,r.s,r);
+    h+=`<div class="flagcard"><h3>${esc(r.s.stateName)} <span class="score">${flags.length} flag${flags.length===1?"":"s"}</span></h3>`;
+    if(!flags.length){ h+=`<div class="noflags">● No major red flags for this profile.</div>`; }
+    else { flags.forEach(f=>{ h+=`<div class="flag sev-${f.sev}"><span class="dot"></span><span><span class="ft">${esc(f.title)}</span>${esc(f.text)}</span></div>`; }); }
+    h+=`</div>`;
+  });
+  h+=`</div></div>`;
+
+  /* recommendation */
+  h+=`<div class="section"><h2><span class="n">7</span> Recommendation</h2><div class="reco">${generateRecommendation(p,rows)}</div></div>`;
+
+  /* scope + estimate note */
+  h+=`<div class="section"><div class="disclaimer"><strong>What this model does and doesn't include.</strong> It compares <em>state-level</em> costs only: state income tax, property tax, sales tax, insurance, and relative cost-of-living and healthcare differences, with annual costs inflated at ${p.inflation||0}%/yr. It does <strong>not</strong> model federal income tax, investment growth or returns, portfolio withdrawal sustainability, RMDs, Medicare/IRMAA surcharges, sequence-of-returns risk, home appreciation, or local/municipal income taxes. The "state-adjusted net worth" figure is therefore a directional comparison between states, not a full retirement projection. ${rows.some(r=>r.s.estimated)?`States marked <span class="est-tag">EST</span> use simplified bracket scaling or simplified retirement-income exclusions.`:``} Retirement-income tax treatment and estate/inheritance status were reviewed against 2025–2026 sources for the major states; income-tax <em>rates and brackets</em> remain approximate. Data last reviewed ${DATA_VINTAGE}.</div></div>`;
+
+  rep.innerHTML=h;
+}
+
+function profileReadout(p){
+  const F = (l,v)=>`<div class="pr"><span>${l}</span><span>${v}</span></div>`;
+  const filingLabel={single:"Single",mfj:"Married filing jointly",mfs:"Married filing separately",hoh:"Head of household"}[p.filing];
+  let s="";
+  s+=F("Filing status",filingLabel);
+  s+=F("Age / retire age",`${p.age} / ${p.retireAge}`);
+  s+=F("Planning horizon",`${p.horizon} yrs`);
+  s+=F("Inflation assumption",`${p.inflation||0}%/yr`);
+  s+=F("Total net worth",fmtUSD(p.netWorth));
+  s+=F("Traditional IRA/401(k)",fmtUSD(p.iraBalance));
+  s+=F("Roth balance",fmtUSD(p.rothBalance));
+  s+=F("Social Security",fmtUSD(p.ssIncome)+"/yr");
+  s+=F("Pension",fmtUSD(p.pension)+"/yr");
+  s+=F("Traditional withdrawals",fmtUSD(p.iraWithdrawals)+"/yr");
+  s+=F("Roth withdrawals",fmtUSD(p.rothWithdrawals)+"/yr");
+  s+=F("Dividends/interest",fmtUSD(p.dividends)+"/yr");
+  s+=F("Long-term cap gains",fmtUSD(p.ltcg)+"/yr");
+  s+=F("Annual spending",fmtUSD(p.spending)+"/yr");
+  s+=F("Housing", p.ownership==="own"?`Own — ${fmtUSD(p.homeValue)}`:`Rent — ${fmtUSD(p.rent)}/yr`);
+  const housingCash = calculateHousingCost(p);
+  if(housingCash>0) s+=F("Annual housing cost", `${fmtUSD(housingCash)}/yr (same in all states)`);
+  return s;
+}
+
+/* ===================== COPY / CSV / PRINT ===================== */
+function buildReportText(){
+  if(!lastRows) return "";
+  const p=profile, rows=lastRows, horizon=Math.max(1,p.horizon);
+  const best=rows[0], worst=rows[rows.length-1];
+  const annualDiff=worst.impact-best.impact, horizonDiff=worst.cumulativeImpact-best.cumulativeImpact;
+  const housingCash=calculateHousingCost(p);
+  const money=v=>(v<0?"-":"")+fmtUSD(Math.abs(v));
+  const L=[];
+  L.push("RETIREMENT STATE COMPARISON — REPORT");
+  L.push(`(Education only — not tax, legal, or financial advice. Data reviewed ${DATA_VINTAGE}.)`);
+  L.push("");
+  L.push("PROFILE");
+  const fl={single:"Single",mfj:"Married filing jointly",mfs:"Married filing separately",hoh:"Head of household"}[p.filing];
+  L.push(`  Filing status: ${fl}`);
+  L.push(`  Age / Retirement age: ${p.age} / ${p.retireAge}   Horizon: ${p.horizon} yrs   Inflation: ${p.inflation||0}%/yr`);
+  L.push(`  Total net worth: ${fmtUSD(p.netWorth)}`);
+  L.push(`  Traditional IRA/401(k): ${fmtUSD(p.iraBalance)}   Roth: ${fmtUSD(p.rothBalance)}   Brokerage: ${fmtUSD(p.brokerage)}   Cash: ${fmtUSD(p.cash)}`);
+  L.push(`  Income — SS ${fmtUSD(p.ssIncome)}, Pension ${fmtUSD(p.pension)}, Trad withdrawals ${fmtUSD(p.iraWithdrawals)}, Roth ${fmtUSD(p.rothWithdrawals)}, Div/Int ${fmtUSD(p.dividends)}, LTCG ${fmtUSD(p.ltcg)}`);
+  L.push(`  Annual spending: ${fmtUSD(p.spending)}   Housing: ${p.ownership==="own"?"Own "+fmtUSD(p.homeValue):"Rent "+fmtUSD(p.rent)+"/yr"}${housingCash>0?`   Annual housing cost: ${fmtUSD(housingCash)}/yr (same in all states, excluded from ranking)`:""}`);
+  L.push("");
+  L.push("RANKING (best to worst by state-adjusted net worth estimate)");
+  rows.forEach(r=>{
+    L.push(`  #${r.rank} ${r.s.stateName} (${r.s.abbreviation}) [modeling confidence: ${r.confidence}]${r.s.estimated?" [EST]":""}`);
+    L.push(`      Income tax ${fmtUSD(r.incomeTax)} | Property ${fmtUSD(r.propertyTax)} | Sales ${fmtUSD(r.salesTax)} | Insurance ${fmtUSD(r.ins)} | CoL adj ${money(r.col)} | Healthcare adj ${money(r.hc)}`);
+    L.push(`      Annual state impact ${money(r.impact)} | cumulative impact (inflated) ${money(r.cumulativeImpact)} | state-adjusted net worth estimate ${fmtUSD(r.projected)}`);
+    L.push(`      Verdict: ${verdictFor(p,r,rows).map(v=>v.t).join(", ")}`);
+  });
+  L.push("");
+  L.push(`BEST: ${best.s.stateName}    WORST: ${worst.s.stateName}`);
+  L.push(`Annual difference: ${fmtUSD(annualDiff)}    ${horizon}-year difference (inflation-adjusted): ${fmtUSD(horizonDiff)}`);
+  L.push("");
+  L.push("TAX TREATMENT");
+  rows.forEach(r=>{
+    const s=r.s;
+    L.push(`  ${s.abbreviation}: SS ${s.socialSecurityTaxTreatment} | Pension ${s.pensionTaxTreatment} | IRA/401k ${s.ira401kTaxTreatment} | Roth not taxed | Int/Div ${s.hasStateIncomeTax?"taxed":"not taxed"} | LTCG ${s.capitalGainsTaxTreatment} | Estate ${s.hasEstateTax?"Yes":"No"} | Inheritance ${s.hasInheritanceTax?"Yes":"No"}`);
+  });
+  L.push("");
+  L.push("RED FLAGS");
+  rows.forEach(r=>{
+    const flags=generateRedFlags(p,r.s,r);
+    L.push(`  ${r.s.stateName}:`);
+    if(!flags.length) L.push("      - No major red flags for this profile.");
+    flags.forEach(f=> L.push(`      - ${f.title}: ${f.text}`));
+  });
+  L.push("");
+  L.push("RECOMMENDATION");
+  const tmp=document.createElement("div"); tmp.innerHTML=generateRecommendation(p,rows);
+  tmp.querySelectorAll("li").forEach(li=> li.textContent="- "+li.textContent);
+  L.push("  "+tmp.textContent.replace(/\s+/g," ").trim());
+  L.push("");
+  L.push("DISCLAIMER");
+  L.push("  This tool is for education and planning only. It is not tax, legal, or financial advice.");
+  L.push("  It compares STATE-LEVEL costs only and does NOT model federal income tax, investment");
+  L.push("  growth, withdrawal sustainability, RMDs, Medicare/IRMAA, sequence risk, home appreciation,");
+  L.push("  or local/municipal income taxes. State tax rules change often. Confirm details with a");
+  L.push("  qualified tax professional before making relocation or retirement decisions.");
+  return L.join("\n");
+}
+
+function copyReport(){
+  if(!lastRows){ toast("Calculate a comparison first."); return; }
+  const text=buildReportText();
+  const done=()=>toast("Report copied to clipboard.");
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  } else fallbackCopy(text,done);
+}
+function fallbackCopy(text,cb){
+  const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); cb(); }catch(e){ toast("Copy failed — select and copy manually."); }
+  document.body.removeChild(ta);
+}
+
+function exportCSV(){
+  if(!lastRows){ toast("Calculate a comparison first."); return; }
+  const horizon=Math.max(1,profile.horizon);
+  const housingCash=calculateHousingCost(profile);
+  const head=["Rank","State","Modeling Confidence","State Income Tax","Property Tax","Sales Tax","Insurance","Cost-of-Living Adjustment","Healthcare Adjustment","Annual State Impact","Cumulative Impact ("+horizon+"yr, "+(profile.inflation||0)+"% infl)","State-Adjusted Net Worth Estimate","Annual Housing Cost (state-independent)","Verdict"];
+  const esc2=v=>{ v=String(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+  const lines=[head.map(esc2).join(",")];
+  lastRows.forEach(r=>{
+    lines.push([r.rank, r.s.stateName, r.confidence, Math.round(r.incomeTax), Math.round(r.propertyTax), Math.round(r.salesTax),
+      Math.round(r.ins), Math.round(r.col), Math.round(r.hc), Math.round(r.impact), Math.round(r.cumulativeImpact), Math.round(r.projected), Math.round(housingCash),
+      verdictFor(profile,r,lastRows).map(v=>v.t).join("; ")].map(esc2).join(","));
+  });
+  const blob=new Blob([lines.join("\n")],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download="retirement-state-comparison.csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast("CSV exported.");
+}
+
+function printReport(){
+  if(!lastRows){ toast("Calculate a comparison first."); return; }
+  window.print();
+}
+
+/* ===================== MISC ===================== */
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2400);
+}
+function reset(){
+  profile={...SAMPLE}; selectedStates=["PA","NJ","FL","TX"];
+  buildForm(); buildStateGrid();
+  lastRows=null;
+  const rep=document.getElementById("report");
+  rep.className="empty-state";
+  rep.innerHTML=`<h2>Your comparison report will appear here</h2><p>Enter your details above, pick your states, and press <strong>Calculate Comparison</strong>.</p>`;
+  toast("Reset to sample profile.");
+}
+
+/* ===================== INIT ===================== */
+buildForm();
+buildPresets();
+buildStateGrid();
+document.getElementById("vintage").textContent = "State tax rules approximate 2025 tax year · data last reviewed "+DATA_VINTAGE+" · all calculations run locally in your browser";
+document.getElementById("btnCalc").addEventListener("click",calculate);
+document.getElementById("btnReset").addEventListener("click",reset);
+document.getElementById("btnCopy").addEventListener("click",copyReport);
+document.getElementById("btnCsv").addEventListener("click",exportCSV);
+document.getElementById("btnPrint").addEventListener("click",printReport);
+// Run once on load with the sample profile
+calculate();
+</script>
+</body>
+</html>
